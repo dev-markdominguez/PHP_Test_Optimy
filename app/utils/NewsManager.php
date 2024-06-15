@@ -58,9 +58,21 @@ class NewsManager
 	 */
 	public function addNews($title, $body)
 	{
-		$sql = "INSERT INTO `news` (`title`, `body`, `created_at`) VALUES('". $title . "','" . $body . "','" . date('Y-m-d') . "')";
-		$this->db->exec($sql);
-		return $this->db->lastInsertId();
+	    $sql = "INSERT INTO `news` (`title`, `body`, `created_at`) VALUES (:title, :body, :created_at)";
+	    $stmt = $this->db->prepare($sql);
+	    
+	    // Bind parameters
+	    $params = [
+            ':title' => $title,
+            ':body' => $body,
+            ':created_at' => date('Y-m-d')
+        ];
+	    
+	    // Execute the statement
+	    $stmt->execute($params);
+	    
+	    // Return the last inserted ID
+	    return $this->db->lastInsertId();
 	}
 
 	/**
@@ -68,20 +80,27 @@ class NewsManager
 	 */
 	public function deleteNews($id)
 	{
-		$comments = $this->commentManager->listComments();
-		$idsToDelete = [];
+	    $comments = $this->commentManager->listComments();
+	    $idsToDelete = [];
 
-		foreach ($comments as $comment) {
-			if ($comment->getNewsId() == $id) {
-				$idsToDelete[] = $comment->getId();
-			}
-		}
+	    foreach ($comments as $comment) {
+	        if ($comment->getNewsId() == $id) {
+	            $idsToDelete[] = $comment->getId();
+	        }
+	    }
 
-		foreach($idsToDelete as $commentId) {
-			$this->commentManager->deleteComment($commentId);
-		}
+	    foreach ($idsToDelete as $commentId) {
+	        $this->commentManager->deleteComment($commentId);
+	    }
 
-		$sql = "DELETE FROM `news` WHERE `id`=" . $id;
-		return $this->db->exec($sql);
+	    $sql = "DELETE FROM `news` WHERE `id` = :id";
+	    $stmt = $this->db->prepare($sql);
+	    
+	    $params = [
+            ':id' => $id
+        ];
+	    
+	    // Execute the statement
+	    return $stmt->execute($params);
 	}
 }

@@ -26,6 +26,11 @@ class DB
         return self::$instance;
     }
     
+    public function prepare($sql)
+    {
+        return $this->pdo->prepare($sql);
+    }
+
     public function select($sql)
     {
         $sth = $this->pdo->query($sql);

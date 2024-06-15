@@ -66,16 +66,47 @@ class CommentManager
         return $comments;
     }
 
-    public function addCommentForNews($body, $newsId)
-	{
-		$sql = "INSERT INTO `comment` (`body`, `created_at`, `news_id`) VALUES('". $body . "','" . date('Y-m-d') . "','" . $newsId . "')";
-		$this->db->exec($sql);
-		return $this->db->lastInsertId($sql);
-	}
+    /**
+     * Adds a new comment to the database for a specific news article.
+     * Refactored to use prepared statements for SQL Injection prevention.
+     * Additional Error handling
+     *
+     * @param string $body The body/content of the comment.
+     * @param int $newsId The ID of the news article the comment belongs to.
+     * @return int|false The ID of the newly inserted comment or false on failure.
+     */
+	public function addCommentForNews($body, $newsId)
+    {
+        $sql = "INSERT INTO `comment` (`body`, `created_at`, `news_id`) VALUES (:body, :created_at, :news_id)";
 
-	public function deleteComment($id)
-	{
-		$sql = "DELETE FROM `comment` WHERE `id`=" . $id;
-		return $this->db->exec($sql);
-	}
+        try {
+            $stmt = $this->db->prepare($sql);
+            $params = [
+                ':body' => $body,
+                ':created_at' => date('Y-m-d'),
+                ':news_id' => $newsId,
+            ];
+
+            $stmt->execute($params);
+
+            return $this->db->lastInsertId();
+        } catch (PDOException $e) {
+            error_log('PDOException: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteComment($id)
+    {
+        $sql = "DELETE FROM `comment` WHERE `id` = :id";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([':id' => $id]);
+
+        } catch (PDOException $e) {
+            error_log('PDOException: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

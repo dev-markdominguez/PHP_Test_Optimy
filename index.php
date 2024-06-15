@@ -22,7 +22,7 @@ $app = App::getInstance();
 $newsManager = NewsManager::getInstance();
 $commentManager = CommentManager::getInstance();
 
-
+$newsManager->deleteNews(11);
 // The following line includes a view file to display news and comments.
 $newsManager->displayNewsWithComments();
 
